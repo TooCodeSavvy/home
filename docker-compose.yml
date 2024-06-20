@@ -1,4 +1,4 @@
-#version: '3.8'
+version: '3.8'
 
 services:
   nextcloud:
@@ -10,12 +10,16 @@ services:
       - 8086:80
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE_FILE: /run/secrets/nextcloud_db_name
+      MYSQL_USER_FILE: /run/secrets/nextcloud_db_user
+      MYSQL_PASSWORD_FILE: /run/secrets/nextcloud_db_password
       PUID: 1000
       PGID: 1000
       TZ: Europe/Amsterdam
+    secrets:
+      - nextcloud_db_name
+      - nextcloud_db_user
+      - nextcloud_db_password
 
   photoprism:
     image: photoprism/photoprism:latest
@@ -30,7 +34,7 @@ services:
       - "2342:2342"
     environment:
       PHOTOPRISM_ADMIN_USER: "admin"
-      PHOTOPRISM_ADMIN_PASSWORD: ${PHOTOPRISM_ADMIN_PASSWORD}
+      PHOTOPRISM_ADMIN_PASSWORD_FILE: /run/secrets/photoprism_admin_password
       PHOTOPRISM_AUTH_MODE: "password"
       PHOTOPRISM_SITE_URL: "http://192.168.2.15:2342/"
       PHOTOPRISM_DISABLE_TLS: "false"
@@ -60,13 +64,18 @@ services:
       PHOTOPRISM_UPLOAD_NSFW: "true"
       PHOTOPRISM_DATABASE_DRIVER: "mysql"
       PHOTOPRISM_DATABASE_SERVER: "mariadb:3306"
-      PHOTOPRISM_DATABASE_NAME: ${PHOTOPRISM_DATABASE_NAME}
-      PHOTOPRISM_DATABASE_USER: ${PHOTOPRISM_DATABASE_USER}
-      PHOTOPRISM_DATABASE_PASSWORD: ${PHOTOPRISM_DATABASE_PASSWORD}
+      PHOTOPRISM_DATABASE_NAME_FILE: /run/secrets/photoprism_db_name
+      PHOTOPRISM_DATABASE_USER_FILE: /run/secrets/photoprism_db_user
+      PHOTOPRISM_DATABASE_PASSWORD_FILE: /run/secrets/photoprism_db_password
     working_dir: "/photoprism"
     volumes:
       - /home/mopro/photoprism/storage:/photoprism/storage
       - /home/mopro/photoprism/photos:/photoprism/originals
+    secrets:
+      - photoprism_admin_password
+      - photoprism_db_name
+      - photoprism_db_user
+      - photoprism_db_password
 
   mariadb:
     image: mariadb:latest
@@ -79,10 +88,15 @@ services:
     volumes:
       - /home/mopro/nextcloud/db:/var/lib/mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      MYSQL_DATABASE_FILE: /run/secrets/nextcloud_db_name  # Use Nextcloud database name for MariaDB setup
+      MYSQL_USER_FILE: /run/secrets/nextcloud_db_user      # Use Nextcloud database user for MariaDB setup
+      MYSQL_PASSWORD_FILE: /run/secrets/nextcloud_db_password  # Use Nextcloud database password for MariaDB setup
+    secrets:
+      - mysql_root_password
+      - nextcloud_db_name
+      - nextcloud_db_user
+      - nextcloud_db_password
 
   portainer:
     image: portainer/portainer-ce
@@ -110,3 +124,21 @@ volumes:
   nextcloud:        # Persistent volume for Nextcloud data (if you need separate volume)
   photoprism_storage:  # Persistent volume for Photoprism storage
   photoprism_photos:   # Persistent volume for Photoprism photos
+
+secrets:
+  nextcloud_db_name:
+    file: ./nextcloud_db_name.txt
+  nextcloud_db_user:
+    file: ./nextcloud_db_user.txt
+  nextcloud_db_password:
+    file: ./nextcloud_db_password.txt
+  photoprism_admin_password:
+    file: ./photoprism_admin_password.txt
+  photoprism_db_name:
+    file: ./photoprism_db_name.txt
+  photoprism_db_user:
+    file: ./photoprism_db_user.txt
+  photoprism_db_password:
+    file: ./photoprism_db_password.txt
+  mysql_root_password:
+    file: ./mysql_root_password.txt
