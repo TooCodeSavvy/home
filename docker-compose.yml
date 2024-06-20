@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+  nextcloud:
+    image: nextcloud:latest
+    container_name: nextcloud
+    volumes:
+      - /home/mopro/nextcloud:/var/www/html
+    ports:
+      - 8086:80
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      PUID: 1000
+      PGID: 1000
+      TZ: Europe/Amsterdam
+
+  photoprism:
+    image: photoprism/photoprism:latest
+    container_name: photoprism
+    stop_grace_period: 10s
+    depends_on:
+      - mariadb
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    ports:
+      - "2342:2342"
+    environment:
+      PHOTOPRISM_ADMIN_USER: "admin"
+      PHOTOPRISM_ADMIN_PASSWORD: ${PHOTOPRISM_ADMIN_PASSWORD}
+      PHOTOPRISM_AUTH_MODE: "password"
+      PHOTOPRISM_SITE_URL: "http://192.168.2.15:2342/"
+      PHOTOPRISM_DISABLE_TLS: "false"
+      PHOTOPRISM_DEFAULT_TLS: "true"
+      PHOTOPRISM_ORIGINALS_LIMIT: 5000
+      PHOTOPRISM_HTTP_COMPRESSION: "gzip"
+      PHOTOPRISM_LOG_LEVEL: "info"
+      PHOTOPRISM_READONLY: "false"
+      PHOTOPRISM_EXPERIMENTAL: "false"
+      PHOTOPRISM_DISABLE_CHOWN: "false"
+      PHOTOPRISM_DISABLE_WEBDAV: "false"
+      PHOTOPRISM_DISABLE_SETTINGS: "false"
+      PHOTOPRISM_DISABLE_TENSORFLOW: "false"
+      PHOTOPRISM_DISABLE_FACES: "false"
+      PHOTOPRISM_DISABLE_CLASSIFICATION: "false"
+      PHOTOPRISM_DISABLE_VECTORS: "false"
+      PHOTOPRISM_DISABLE_RAW: "false"
+      PHOTOPRISM_RAW_PRESETS: "false"
+      PHOTOPRISM_SIDECAR_YAML: "true"
+      PHOTOPRISM_BACKUP_ALBUMS: "true"
+      PHOTOPRISM_BACKUP_DATABASE: "true"
+      PHOTOPRISM_BACKUP_SCHEDULE: "daily"
+      PHOTOPRISM_INDEX_SCHEDULE: ""
+      PHOTOPRISM_AUTO_INDEX: 300
+      PHOTOPRISM_AUTO_IMPORT: -1
+      PHOTOPRISM_DETECT_NSFW: "false"
+      PHOTOPRISM_UPLOAD_NSFW: "true"
+      PHOTOPRISM_DATABASE_DRIVER: "mysql"
+      PHOTOPRISM_DATABASE_SERVER: "mariadb:3306"
+      PHOTOPRISM_DATABASE_NAME: ${PHOTOPRISM_DATABASE_NAME}
+      PHOTOPRISM_DATABASE_USER: ${PHOTOPRISM_DATABASE_USER}
+      PHOTOPRISM_DATABASE_PASSWORD: ${PHOTOPRISM_DATABASE_PASSWORD}
+    working_dir: "/photoprism"
+    volumes:
+      - /home/mopro/photoprism/storage:/photoprism/storage
+      - /home/mopro/photoprism/photos:/photoprism/originals
+
+  mariadb:
+    image: mariadb:11
+    restart: unless-stopped
+    stop_grace_period: 5s
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    command: --innodb-buffer-pool-size=512M --transaction-isolation=READ-COMMITTED --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max-connections=512 --innodb-rollback-on-timeout=OFF --innodb-lock-wait-timeout=120
+    volumes:
+      - /home/mopro/nextcloud/db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    ports:
+      - "8000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    restart: unless-stopped
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    ports:
+      - "8087:8080"
+    restart: unless-stopped
+
+networks:
+  local_network:
+    driver: bridge
+
+volumes:
+  portainer_data:   # Persistent volume for Portainer
+  nextcloud:        # Persistent volume for Nextcloud data (if you need separate volume)
+  photoprism_storage:  # Persistent volume for Photoprism storage
+  photoprism_photos:   # Persistent volume for Photoprism photos
