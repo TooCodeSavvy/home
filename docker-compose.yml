@@ -84,14 +84,14 @@ services:
     security_opt:
       - seccomp:unconfined
       - apparmor:unconfined
-    command: --innodb-buffer-pool-size=512M --transaction-isolation=READ-COMMITTED --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max-connections=512 --innodb-rollback-on-timeout=OFF --innodb-lock-wait-timeout=120
+    command: --innodb-buffer-pool-size=512M --transaction-isolation=READ-COMMITTED --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max-connections=512 --innodb-rollback-on-timeout=OFF --innodb-lock-wait-timeout=120 --skip-grant-tables
     volumes:
       - /home/mopro/nextcloud/db:/var/lib/mysql
     environment:
-      MYSQL_ROOT_PASSWORD: 54321
-      MYSQL_DATABASE: maria
-      MYSQL_USER: mark
-      MYSQL_PASSWORD: 54321
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     secrets:
       - mysql_root_password
       - nextcloud_db_name
