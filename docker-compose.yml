@@ -88,10 +88,10 @@ services:
     volumes:
       - /home/mopro/nextcloud/db:/var/lib/mysql
     environment:
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
-      MYSQL_DATABASE_FILE: /run/secrets/nextcloud_db_name  # Use Nextcloud database name for MariaDB setup
-      MYSQL_USER_FILE: /run/secrets/nextcloud_db_user      # Use Nextcloud database user for MariaDB setup
-      MYSQL_PASSWORD_FILE: /run/secrets/nextcloud_db_password  # Use Nextcloud database password for MariaDB setup
+      MYSQL_ROOT_PASSWORD: 54321
+      MYSQL_DATABASE: maria
+      MYSQL_USER: mark
+      MYSQL_PASSWORD: 54321
     secrets:
       - mysql_root_password
       - nextcloud_db_name
